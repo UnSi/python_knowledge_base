@@ -3,9 +3,14 @@
 
 ### manage.py
 > runserver - рансервер
+>
 > makemigrations - создать файл миграций
+>
 > migrate - мигрировать из файла ^
+>
 > createsuperuser - создать суперюзера
+>
+> startapp appname - создать приложение
 
 
 ### settings.py
@@ -41,7 +46,20 @@ USE_TZ = True
 /app/forms.py - формы
 
 ### models
-TODO: описать типы
+Примеры полей из разных моделей:
+```
+tagline = models.CharField('Слоган', max_length=100, default='')
+description = models.TextField('Описание')
+poster = models.ImageField('Постер', upload_to='movies/')
+budget = models.PositiveIntegerField("Бюджет", default=0, help_text='указывать сумму в долларах')
+world_premiere = models.DateField('Премьера в мире', default=date.today)
+url = models.SlugField(max_length=160, unique=True)
+draft = models.BooleanField('Черновик', default=False)
+category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.SET_NULL, null=True)
+parent = models.ForeignKey('self', verbose_name='Родитель', on_delete=models.SET_NULL, blank=True, null=True)
+directors = models.ManyToManyField(Actor, verbose_name="режиссер", related_name="film_director")
+```
+
 
 get_absolute_url - могут использоваться другими классами, в админке появится ссылка на экземпляр модели на сайте
 save - можно подмешать в запись в бд
@@ -225,6 +243,7 @@ return render(request, template_name, context = {'page': page})
 - from django.urls import path, include  # path для путей в урлах, include для подключения путей из файла
 - from django.urls import reverse # формирование ссылки на основании name в urls
 - from django.shortcuts import render, redirect 
+- from django.db import models
 - from django.views.generic import ListView, DetailView # дженерики (вьюхи, которые всё делают за тебя)  
 - from django.core.paginator import Paginator 
 - from django.contrib.auth.mixins import LoginRequiredMixin 
