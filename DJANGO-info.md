@@ -16,7 +16,7 @@ ALLOWED_HOSTS = [] - домен сайта
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__)) - путь проекта, понадобиться в темплейтах
 
 INSTALLED_APS = [] - приложения
-MIDDLEWARE = [] - список промежуточных слоёв????
+MIDDLEWARE = [] - список промежуточных слоёв(проверки, авторизации ..)
 ROOT_URLCONF = [] - модуль, к-рый содержит корневые шаблоны юрлов
 
 TEMPLATES = [{..., 'DIRS': [os.path.join(PROJECT_ROOT, 'templates')],.... }]  - прописать путь для темплейтов
@@ -36,29 +36,47 @@ USE_TZ = True
 /app/models.py - модели (бд)
 /app/tests.py - тесты
 /app/views.py - логика. Запрос-ответ (html, redirect, 404...)
-/app/migrations.py - миграции
-/app/urls - юрлы приложения
-/app/forms - формы
+/app/migrations - миграции
+/app/urls.py - юрлы приложения
+/app/forms.py - формы
 
 ### models
 TODO: описать типы
 
+get_absolute_url - могут использоваться другими классами, в админке появится ссылка на экземпляр модели на сайте
+save - можно подмешать в запись в бд
+```
 def get_absolute_url(self):
-	return reverse("movie.detail", kwargs = {"slug": self.some_field})
+	return reverse("url_name", kwargs = {"slug": self.some_field})
 	
+def save(self, *args, **kwargs):
+    super.save(*args, **kwargs)
+
+class Meta:
+    verbose_name = 'Name'
+    verbose_name_plural = 'Names'
+    ordering = ["-value"]
+```
+
 SomeModel.objects.all() # вытащить всё
+SomeModel.objects.create(field_1 = 'value', field_2 = 'value') # создать 
 SomeModel.objects.count() # узнать кол-во строк
-SomeModel.objects.filter(some_field=some_value) # вытащить по условию, подробнее django filter queries, 
+SomeModel.objects.filter(some_field=some_value) # вытащить по условию, вернет queryset (get вернет объект)
+подробнее django filter queries
 >  https://docs.djangoproject.com/en/3.1/ref/models/querysets/#django.db.models.query.QuerySet
 
 SomeModel.objects.exclude(some_field=some_value) # исключить
+
+SomeModel.objects.get(some_field__param='value') # вместо param, value подставить:
+- param = iexact, value = "BlA-bLa" # Case-insensitive exact match. поиск по полю без учета регистра
+- param = contains, value = "bla" # содержит bla
 
 
 ### templates
 
 view - вытаскивает вью для этого хтмл??
 
-m2m циклом, для обратной связи используется related_name в моделях
+m2m циклом, для обратной связи используется related_name в моделях, поле является менеджером
 
 статика:
 {% load static %}
@@ -152,13 +170,59 @@ class AnyForm(forms.ModelForm):
         model = SomeModel
         fields = ('name', 'email', 'text') # тащит с хтмл поля c name = 'name', 'email', 'text' 
 		# потом во вью можно сохранять в модель TODO разобраться, плохо понятно
-```		
+```
 		
 		
+### permissions
+Миксин для проверки залогиненности:
+> from django.contrib.auth.mixins import LoginRequiredMixin 
+>
+есть бул. поле raise_exception: тру(403), фолс(редирект на логин) 
+
+в темплейтах проверить админа:
+```
+{% if request.user.is_authenticated and request.user.is_staff %} {% endif %}
+```
+
+### pagination
+Вариант1 (требует ordering в модели):
+
+теория :
+```
+from django.core.paginator import Paginator
+
+OBJ_PER_PAGE = 10
+
+paginator = Paginator(queryset, OBJ_PER_PAGE)
+page1 = paginator.get_page(1)
+dir(page1) # >>> 'count', 'end_index', 'has_next', 'has_other_pages', 'has_previous', 'index', 'next_page_number', 
+# 'number', 'object_list', 'paginator', 'previous_page_number', 'start_index'
+```
+
+во вьюхах:
+```
+paginator = Paginator(queryset, OBJ_PER_PAGE)
+page_number = request.GET.get('page', 1) # для ссылки типа blabla/?page=2 
+page = paginator.get_page(page_number)
+return render(request, template_name, context = {'page': page})
+```
+в темплейтах:
+```
+{% for p_number in page.paginator.page_range %}
+    {% if page.number == p_number %}
+        <a href="?page={{ p_number }}">текущая</a>
+    {% elif p_number > page.number|add:-3 and p_number > page.number|add:3 %}
+        <a href="?page={{ p_number }}">{{ p_number }}</a>
+    {% endif %}
+{% endfor %}
+```
 
 
 ### libs
 
-> from django.urls import path, include  # path для путей в урлах, include для подключения путей из файла
-> from django.urls import reverse # нужно для get_absolute_url, TODO: выяснить, как работает, если буду использовать
-> from django.views.generic import ListView, DetailView # более специализированные вьюхи 
+- from django.urls import path, include  # path для путей в урлах, include для подключения путей из файла
+- from django.urls import reverse # формирование ссылки на основании name в urls
+- from django.shortcuts import render, redirect 
+- from django.views.generic import ListView, DetailView # более специализированные вьюхи 
+- from django.core.paginator import Paginator 
+- from django.contrib.auth.mixins import LoginRequiredMixin 
