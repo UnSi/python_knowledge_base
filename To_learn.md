@@ -23,15 +23,15 @@
 - миксины
 - __slots__, __bases__ 
 - тестирование (unittest)
-- context, request, post, get, form, пагинация в джанге
+- ~~context, request, post, get, form, пагинация в джанге~~
 - coockiecuter
 - ~~сущности~~
 - ~~postman~~
 - тонкие модели, толстые вьюхи или наоборот
 - статика
 - pipenv
-- instance-классы
-- reverse
+- instance-классы?
+- ~~reverse~~
 - logger, raven, centry
 
 ####Global:
