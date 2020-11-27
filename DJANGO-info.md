@@ -61,8 +61,9 @@ class Meta:
 SomeModel.objects.all() # вытащить всё
 SomeModel.objects.create(field_1 = 'value', field_2 = 'value') # создать 
 SomeModel.objects.count() # узнать кол-во строк
-SomeModel.objects.filter(some_field=some_value) # вытащить по условию, вернет queryset (get вернет объект)
+SomeModel.objects.filter(some_field=some_value) # вытащить по условию, вернет queryset (get вернет объект) 
 подробнее django filter queries
+SomeModel.objects.update_or_create() # обновить или создать
 >  https://docs.djangoproject.com/en/3.1/ref/models/querysets/#django.db.models.query.QuerySet
 
 SomeModel.objects.exclude(some_field=some_value) # исключить
@@ -74,7 +75,7 @@ SomeModel.objects.get(some_field__param='value') # вместо param, value п�
 
 ### templates
 
-view - вытаскивает вью для этого хтмл??
+{{ view }} - вытаскивает вью для этого хтмл
 
 m2m циклом, для обратной связи используется related_name в моделях, поле является менеджером
 
@@ -86,7 +87,7 @@ m2m циклом, для обратной связи используется re
 TODO: выяснить, как точно эта штука работает   \/
 {% url name_from_url some_model.link_part %} # в урлах, в path должен быть 3-й атрибут. some_model.link_part - ссылка, которая будет передаваться в урлы 
 
-{% some_model.get_absolute_url %} # вытащить урл с модели
+{% some_model.get_absolute_url %} # вытащить урл с модели, если написать этот метод в модели
 {% for item in main_model.fkitems_set %} # у модели fkitems есть foreign key main_model. из main_model можно вытащить fkitems_set
 
 темплейт-теги в:
@@ -130,6 +131,7 @@ class AnyModelAdmin(admin.ModelAdmin):
 ```
 	
 ### views
+TODO: описать какой миксин, за что отвечает
 
 class Views: # От него наследоваться, есть метод as_view(), можно вставлять в урлы
 ```
@@ -223,6 +225,6 @@ return render(request, template_name, context = {'page': page})
 - from django.urls import path, include  # path для путей в урлах, include для подключения путей из файла
 - from django.urls import reverse # формирование ссылки на основании name в urls
 - from django.shortcuts import render, redirect 
-- from django.views.generic import ListView, DetailView # более специализированные вьюхи 
+- from django.views.generic import ListView, DetailView # дженерики (вьюхи, которые всё делают за тебя)  
 - from django.core.paginator import Paginator 
 - from django.contrib.auth.mixins import LoginRequiredMixin 
