@@ -173,7 +173,7 @@ import re
 txt = "The rain in Spain"
 x = re.search("^The.*Spain$", txt)  # вернет объект, если он начинается на the, заканч Spain
 ```
-- \d - any digit  0-9
+- \d - all digit  0-9
 - \D - any non-digit 
 - \w - any alphabet symbol (characters from a to Z, digits from 0-9, and the underscore _ character)
 - \W - any non alphabet symbol
