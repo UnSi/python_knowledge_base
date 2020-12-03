@@ -50,7 +50,7 @@ USE_TZ = True
 ```
 tagline = models.CharField('Слоган', max_length=100, default='')
 description = models.TextField('Описание')
-poster = models.ImageField('Постер', upload_to='movies/')
+poster = models.ImageField('Постер', upload_to='movies/') # есть поле url, можно вытащить ссыль на изо
 budget = models.PositiveIntegerField("Бюджет", default=0, help_text='указывать сумму в долларах')
 world_premiere = models.DateField('Премьера в мире', default=date.today)
 url = models.SlugField(max_length=160, unique=True)
@@ -102,11 +102,11 @@ m2m циклом, для обратной связи используется re
 <head>
 <link rel = "stylesheeet" href = "{% static 'some_path/some_style.css' %}">
 
-TODO: выяснить, как точно эта штука работает   \/
-{% url name_from_url some_model.link_part %} # в урлах, в path должен быть 3-й атрибут. some_model.link_part - ссылка, которая будет передаваться в урлы 
+{% url name_from_url variable %} # в урлах, в path должен быть 3-й атрибут.  variable - если в урле есть аргумент
 
 {% some_model.get_absolute_url %} # вытащить урл с модели, если написать этот метод в модели
 {% for item in main_model.fkitems_set %} # у модели fkitems есть foreign key main_model. из main_model можно вытащить fkitems_set
+.  # можно использовать related name в модели - заменит set
 
 темплейт-теги в:
 app/templatetags/some_tag.py
@@ -151,7 +151,7 @@ class AnyModelAdmin(admin.ModelAdmin):
 ### views
 TODO: описать какой миксин, за что отвечает
 
-class Views: # От него наследоваться, есть метод as_view(), можно вставлять в урлы
+class View: # От него наследоваться, есть метод as_view(), можно вставлять в урлы. Название функции - хттп-метод
 ```
 class AnyView(View):
 	def get(self, request, pk): #принимает гет-запросы хттп, pk - primary key, если надо
@@ -162,11 +162,35 @@ class AnyView(View):
 
 
 class ListView # позволяет выводить список моделей
+###### наследуется от MultipleObjectTemplateResponseMixin(TemplateResponseMixin), BaseListView(MultipleObjectMixin(ContextMixin), View)
+
+
+MultipleObjectMixin - можно укзать queryset, model, paginate_by, context_object_name(по умол. имя модели.ловер_list),
+paginator_class, page_kwarg='page', ordering. Есть метод get_queryset
+
+ContextMixin - запихивает в контекст view: self, подмешивает extra_context в контекст
+MultipleObjectMixin - составляет queryset, используя ordering
+
+TemplateResponseMixin - template_name, render_to_response вкладывает контекст
+MultipleObjectTemplateResponseMixin - template_name_suffix (по умол. _list)
+
 class DetailView # позволяет выводить определенную модель
+###### наследуется от SingleObjectTemplateResponseMixin(TemplateResponseMixin), BaseDetailView(SingleObjectMixin(ContextMixin), View)
+SingleObjectMixin - аналогично multiple, только get_object(), есть поля model, queryset, slug_field (иполя в модели),
+context_object_name, slug_url_kwarg = 'slug'(в урлах), pk_url_kwarg = 'pk' (в урлах), query_pk_and_slug = False
+
+SingleObjectTemplateResponseMixin - template_name_suffix (по умол. _detail)
+
+class CreateView # создание объекта
+###### наследуется от SingleObjectTemplateResponseMixin(TemplateResponseMixin), BaseCreateView(ModelFormMixin(FormMixin, SingleObjectMixin(ContextMixin), ProcessFormView(View))
+template_name_suffix = "_form"
+
+ModelFormMixin - fields, get_form_class (вытаскивает fields или составляет по модели и строит форму)
+
 ```
 class AnyView(ListView):
 	model = AnyModel
-	queryset = AnyModel.objects.all()
+	queryset = AnyModel.objects.filter(draft=False) # если не указать - all() 
 	template_name = "some_template.html" #если не указать, сгененрирует сам
 ```
 
@@ -191,7 +215,20 @@ class AnyForm(forms.ModelForm):
         fields = ('name', 'email', 'text') # тащит с хтмл поля c name = 'name', 'email', 'text' 
 		# потом во вью можно сохранять в модель TODO разобраться, плохо понятно
 ```
-		
+	
+### media
+в settings.py:	
+```
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+```
+в urls:
+```
+from django.conf import settings
+from django.conf.urls.static import static
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
 		
 ### permissions
 Миксин для проверки залогиненности:
