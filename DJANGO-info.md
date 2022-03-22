@@ -182,10 +182,12 @@ context_object_name, slug_url_kwarg = 'slug'(в урлах), pk_url_kwarg = 'pk'
 SingleObjectTemplateResponseMixin - template_name_suffix (по умол. _detail)
 
 class CreateView # создание объекта
-###### наследуется от SingleObjectTemplateResponseMixin(TemplateResponseMixin), BaseCreateView(ModelFormMixin(FormMixin, SingleObjectMixin(ContextMixin), ProcessFormView(View))
+###### наследуется от SingleObjectTemplateResponseMixin(TemplateResponseMixin), BaseCreateView(ModelFormMixin(FormMixin, SingleObjectMixin(ContextMixin)), ProcessFormView(View))
 template_name_suffix = "_form"
 
 ModelFormMixin - fields, get_form_class (вытаскивает fields или составляет по модели и строит форму)
+FormMixin - form_class (если своя форма), success_url, prefix, form_valid(), form_invalid() 
+ProcessFormView - get, post(if is_valid - form_valid... ) - получает и валидирует форму, обрабатывает хттп методы
 
 ```
 class AnyView(ListView):
@@ -284,3 +286,9 @@ return render(request, template_name, context = {'page': page})
 - from django.views.generic import ListView, DetailView # дженерики (вьюхи, которые всё делают за тебя)  
 - from django.core.paginator import Paginator 
 - from django.contrib.auth.mixins import LoginRequiredMixin 
+
+
+### мелочи
+{{ request.path }} - текущий урл
+{{ request.get_full_path }} - урл с аргументами 
+{{ request.META.QUERY_STRING }} - аргументы

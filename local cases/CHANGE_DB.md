@@ -11,3 +11,7 @@
 ##### 5. в new_p: python manage.py loaddata dump.json
 
 ##### удалить все лишнее (temp_p, оба dump.json), откатить sqlite3 в old_p с бекапа, вы великолепны.
++ скопировать бд postgres:
+    
+    
+    CREATE DATABASE newdb WITH TEMPLATE originaldb OWNER dbuser;

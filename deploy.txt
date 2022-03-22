@@ -1,0 +1,135 @@
+сделано на основе https://gist.github.com/DJWOMS/11f91f60def49d7bd1ca9c5dc4bbc3dc
+
+Веб-сервер (локальный):
+config/gunicorn.conf.py:
+
+bind = '127.0.0.1:8000'
+workers = 2
+user = 'user_name'
+timeout = 120
+
+http-сервер nginx (проксирует внешние запросы на гуникорн):
+
+profile_app.conf:
+
+[program:profile_app]
+command=/home/user_name/venv/bin/gunicorn CMS.wsgi:application -c /home/user_name/profile_app/config/gunicorn.conf.py
+directory=/home/user_name/profile_app
+user=test
+autorestart=true
+redirect_stderr=true
+stdout_logfile = /home/user_name/profile_app/logs/debug.log
+
+создать logs/debug.log
+
+убедиться, что secret_key нет в открытом доступе
+
+adduser user_name
+update, upgrade
+apt install sudo
+usermod -aG sudo username
+
+sudo apt install nginx git? supervisor
+sudo apt install postgresql
+
+sudo -u postgres psql
+CREATE DATABASE db_name;
+CREATE USER db_user WITH PASSWORD 'db_user_password';
+ALTER ROLE db_user SET client_encoding TO 'utf8';
+ALTER ROLE db_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE db_user SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE db_name TO db_user;
+\q
+
+apt-get install python3-venv
+python3 -m venv venv
+source venv/bin/activate
+
+pip install requirements.txt
+pip install gunicorn
+pip install psycopg2-binary
+
+
+gunicorn project.wsgi:application --bind 111.222.33.44:8000
+не забыть указать ип в allowed hosts
+/etc/nginx/sites_available/default:
+
+server {
+    listen 80;
+    server_name 111.222.333.44; # здесь прописать или IP-адрес или доменное имя сервера
+    access_log  /var/log/nginx/example.log;
+ 
+    location /static/ {
+        root /home/user/myproject/;
+        expires 30d;
+    }
+	
+	location /media/ {
+        root /home/user/myproject/;
+        expires 30d;
+    }
+ 
+    location / {
+        proxy_pass http://127.0.0.1:8000; 
+        proxy_set_header Host $server_name;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+
+sudo service nginx restart
+
+
+For SSL
+-------
+map $sent_http_content_type $expires {
+    "text/html"                 epoch;
+    "text/html; charset=utf-8"  epoch;
+    default                     off;
+}
+server {
+    listen 80;
+    server_name www.django.com;
+    return 301 https://django.com$request_uri;
+}
+server{
+    listen 443 ssl;
+    ssl on;                                      
+    ssl_certificate /etc/ssl/django.crt;     
+    ssl_certificate_key /etc/ssl/django.key; 
+    server_name django.com;
+    client_max_body_size 100M;
+
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_http_version 1.1;
+    gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript;
+
+    location /static/ {
+        root /home/user/pj;
+        expires 1d;
+    }
+
+    location /media/ {
+        root /home/user/pj;
+        expires 1d;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $server_name;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+
+---------------------------------------
+Настройка supervisor
+cd /etc/supervisor/conf.d/
+sudo update-rc.d supervisor enable
+sudo service supervisor start
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl status project
+sudo supervisorctl restart project
